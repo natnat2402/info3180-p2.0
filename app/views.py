@@ -7,10 +7,10 @@ This file creates your application.
 import os
 from app import app, db
 from flask import render_template, request, redirect, url_for, send_from_directory, flash
-#from app.propertyform import Propertyform
 from werkzeug.utils import secure_filename
 from app.models import Favourites, Cars, Users
 import psycopg2
+#from app.forms import AddNewCarForm()
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -24,98 +24,84 @@ def home():
     """Render website's home page."""
     return app.send_static_file('index.html')
 
-#@app.route('/about/')
-#def about():
-    #"""Render the website's about page."""
-    #return render_template('about.html', name="Mary Jane")
-"""
+#Returns all cars from database and adds cars to DB
+@app.route ('/api/cars', methods=['POST','GET'])
+def returncars():
+    carlist = []
+    rootdir=os.getcwd()
+    path=rootdir+ '/uploads'
+    db = connect_db()
+    cur = db.cursor()
 
-@app.route('/property', methods=['POST', 'GET'])
-def property():
-    form=Propertyform()
-    
+    if request.method == 'GET':
+        cur.execute('select * from "cars"')
+        carinfo = cur.fetchall()
+        db.commit()
+        for info in carinfo
+            cardetails=[{
+                "description":info[1],
+                "make":info[2],
+                "model":info[3],
+                "colour":info[4],
+                "year":info[5],
+                "transmission":info[6],
+                "car_type":info[7],
+                "price":info[8],
+                "photo":info[9],
+                "user_id":info[10]
+            }]
+        cur.close()
+        for subdir, dirs, files in os.walk(path):
+            for car in files:
+                if car.endswith(('.png','.PNG', '.jpg','.JPG', '.jpeg','JPEG')):
+                    carlist.append(car)
+                    carimglist = [{"carimage":carlist}]
+
+        return jasonify(cardetails=cardetails, carimglist=carimglist)
+
+    if request.method == 'POST':
+        if form.validate_on_submit:
+            form = AddNewCarForm()
+            #save image in uploads folder
+            car_img=form.photo.data
+            filename=secure_filename(car_img.filename)
+            car_img.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            #Retrieve car info from form
+            #Insert info into database
+            cur.execute('insert into "cars" ("Description","Make","Model","Color","Year","Transmission","Car Type","Price,"Photo","User ID")values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',(request.form['description'], request.form['make'],request.form['model'],request.form['colour'],request.form['year'],request.form['transmission'],request.form['cartype'],request.form['price'],filename,request.form['user_id']))
+            db.commit()
+            cur.close()
+            #flash('New Vehicle added', 'success')
+            jsonify(message="New Vehicle added Successfully") 
+            #redirect(url_for('/api/cars'))
+
+    #return render_template('index.html')
+
+'''
+#Adds new car to database
+@app.route ('/api/cars', methods=['POST','GET'])
+def addnewcar():
+    form = AddNewCarForm()
+    db = connect_db()
+    cur = db.cursor()
     if request.method == 'POST': 
         if form.validate_on_submit:
-            photo=form.photo.data
-            filename=secure_filename(photo.filename)
-            photo.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            #save image in uploads folder
+            car_img=form.photo.data
+            filename=secure_filename(car_img.filename)
+            car_img.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            #Retrieve car info from form
+            #Insert info into database
+            cur.execute('insert into "cars" ("Description","Make","Model","Color","Year","Transmission","Car Type","Price,"Photo","User ID")values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',(request.form['description'], request.form['make'],request.form['model'],request.form['colour'],request.form['year'],request.form['transmission'],request.form['cartype'],request.form['price'],filename,request.form['user_id']))
+            db.commit()
 
-            datab=Properties()
+            flash('New Vehicle added', 'success')
+            redirect(url_for('/api/cars'))
+    return #return render_template(' ') new car form
 
-            datab.title=form.title.data
-            datab.desc=form.desc.data
-            datab.bedroom=form.bedroom.data
-            datab.bathroom=form.bathroom.data
-            datab.price=form.price.data
-            datab.location=form.location.data
-            datab.propertytype=form.select.data
-            datab.photoname=filename
-           
-            db.session.add(datab)
-            db.session.commit()
-        
-            flash('Property Added', 'success')
-            return redirect(url_for('properties'))
-
-    return render_template('propertyform.html', form=form)
-
-def getprop():
-    prop=Properties.query.all()
-    results=[{
-        "photo":p.photoname,
-        "title":p.title,
-        "location":p.location,
-        "price":p.price,
-        "id":p.id,
-        "bedroom":p.bedroom,
-        "bathroom":p.bathroom,
-        "propertytype":p.propertytype,
-        "desc":p.desc
-        
-        
-    } for p in prop]
-    return results
-
-#def connect_db():
-#    return psycopg2.connect(app.config['SQLALCHEMY_DATABASE_URI'])
-
-@app.route('/properties')
-def properties():
-    prop=getprop()
-
-    
-    return render_template('properties.html',prop=prop )
+'''
 
 
-@app.route('/properties/<ph>')
-def get_image(ph):
-
-    root_dir=os.getcwd()
-
-    return send_from_directory(os.path.join(root_dir, app.config['UPLOAD_FOLDER']), ph)
-
-
-def get_uploaded_images():
-    rootdir=os.getcwd()
-    path=rootdir+ '/uploads' 
-    file_list = [] 
-
-    for subdir, dirs, files in os.walk(path):
-        for name in files:
-            if name.endswith(('.png','.PNG', '.jpg','.JPG', '.jpeg','JPEG')):
-                file_list.append(name)
-
-    return file_list
-
-
-@app.route('/property/<propertyid>')
-def viewproperty(propertyid):
-    prop=getprop()
-    l=[prop,propertyid]
-    return render_template('property.html', prop=l)
-
-
-"""
 
 ###
 # The functions below should be applicable to all Flask apps.

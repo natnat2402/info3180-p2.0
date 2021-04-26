@@ -25,19 +25,6 @@ class Cars(db.Model): #one-to-one
     favourites=db.relationship('Favourites', backref='cars')
 
 
-
-    
-
-    #def __init__(self, title,desc,bedroom,bathroom,price,location,propertytype,photoname):
-    #   self.title = title
-     #   self.desc=desc
-      #  self.bedroom=bedroom
-       # self.bathroom=bathroom
-        #self.price=price
-      #  self.location=location
-       # self.propertytype=propertytype
-        #self.photoname=photoname
-
     def is_authenticated(self):
         return True
 

@@ -1,36 +1,120 @@
 /* Add your Application JavaScript */
-const app = Vue.createApp({
-  data() {
-    return {
-      
-      welcome: 'Hello World! Welcome to VueJS',
-      components: {
-        'home': Home,
-        'news-list': NewsList
-        }
-    }
-  }
-});
-
-
 const Home = {
   name: 'Home',
   template: `
-  _ADD CODE_
+  <div class="home">
+    <img src="/static/images/logo.png" alt="VueJS Logo">
+    <h1>{{ welcome }}</h1>
+  </div>
   `,
-  data() {return {
-  welcome: 'Hello World! Welcome to VueJS'
+  data() {
+    return {
+      welcome: 'Hello World! Welcome to VueJS'
+    }
   }
-  }
-  };
+ };
 
+ const carlist = {
+  name: 'carlist',
+  template: 
+    `
+    <div class="cars">
+      <h2>Explore</h2>
+	  <ul class="carlist">
+		  <div id="searchbox" class="form-inline d-flex">
+		  
+		  
+			<div id="makebox">
+			  <label id="makelabel">Make</label>
+			  <input type="search" id="input1" name="make" class="form-control mb-2 mr-sm-2"/>
+			</div>
+			<div id="label-box">
+			  <label id="model-label">Model</label>
+			  <input type="search" id="input2" name="model" class="form-control mb-2 mr-sm-2" />
+			</div>
+			<button id="btn" class="form-control mb-2 mr-sm-2">Search</button>
+
+		  </div>  
+			<div class ="info">
+			  
+			  <li class="carinfo" v-for="(n,i) in cardetails.length">
+				<img v-bind:src ="'{{ carimglist[i] }}'"><br>
+				<b id="cd">{{ cardetails[i].year }}</b>
+				<b>{{ cardetails[i].make }}</b>
+				<div id="price"><img id="ppic" alt="price pic" src ="/static/images/price-tag-icon.png">  {{ cardetails[i].price }}</div>
+				<p id="cd">{{ cardetails[i].model }}</p>
+				
+				<button id="detailbtn">View more details</button>
+			  </li>
+			</div>      
+	  </ul>
+    </div
+  `,
+    created() {
+      let self = this;
+      fetch('/api/cars', {
+                method: 'GET'
+               })
+ 
+    .then(function(response) {
+      return response.json();
+    })
+    .then(function(data) {
+      console.log(data);
+      self.cardetails = data.cardetails;
+	  self.carimglist = data.carimglist;
+    });
+    },
+   
+  data(){
+    return{
+		cardetails:[],
+		carimglist:[]
+	}
+	
+  }/*,
+  methods: {
+    displaycar() {
+      let self = this;
+      fetch('/api/cars', {
+                method: 'GET'
+               })
+      .then(function(response) {
+        return response.json();
+      })
+      .then(function(data) {
+        console.log(data);
+        self.cardetails = data.cardetails;
+
+      });
+    }
+  }*/
+
+};
+
+
+const app = Vue.createApp({
+  data() {
+    return {
+      welcome: 'Hello World! Welcome to VueJS'
+    }
+  },
+  components: {
+    'home': Home,
+    'cars': carlist
+  }
+});
+
+const router = VueRouter.createRouter({
+  history: VueRouter.createWebHistory(),routes: [{ path: '/', component: Home },{ path: '/api/cars', component: carlist }]
+});
 
 app.component('app-header', {
   name: 'AppHeader',
   template: `
       <header>
           <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
-            <a class="navbar-brand" href="#">United Auto Sales</a>
+            <a class="navbar-brand" href="#">VueJS App</a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
               <span class="navbar-toggler-icon"></span>
             </button>
@@ -38,10 +122,10 @@ app.component('app-header', {
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
               <ul class="navbar-nav mr-auto">
                 <li class="nav-item active">
-                <router-link to="/register" class="nav-link">Register</router-link>
+                  <router-link to="/" class="nav-link">Home</router-link>
                 </li>
                 <li class="nav-item">
-                <router-link to="/login" class="nav-link">Login</router-link>
+                  <router-link to="/api/cars" class="nav-link">Explore</router-link>
                 </li>
               </ul>
             </div>
@@ -52,6 +136,9 @@ app.component('app-header', {
     return {};
   }
 });
+
+
+
 
 app.component('app-footer', {
   name: 'AppFooter',
@@ -67,83 +154,8 @@ app.component('app-footer', {
           year: (new Date).getFullYear()
       }
   }
-})
-
-const NewsList ={
-  name: 'Newslist', 
-  template:
-
-  `<div class="news">
-  <h2>News</h2>
-  <div class="form-inline d-flex justify-content-center">
-<div class="form-group mx-sm-3 mb-2">
-<label class="sr-only" for="search">Search</label>
-<input type="search" name="search" v-model="searchTerm"
-id="search" class="form-control mb-2 mr-sm-2" placeholder="Enter 
-search term here" />
-<p>You are searching for {{ searchTerm }}</p>
-</div><button class="btn btn-primary mb-2"
-@click="searchNews">Search</button>
-</div>
-  <ul class="news__list">
-  <li v-for="article in articles"
-class="news__item"> {{article.title }} <br> <img :src=article.urlToImage> <br> {{article.description}} </li>
-  </ul>
-  </div>
-  `,
-  created() {
-    let self=this;
-    fetch('https://newsapi.org/v2/top-headlines?country=us',
-    {
-      
-    headers: {
-      
-    'Authorization': 'Bearer <toke>'
-    }
-    })
-    .then(function(response) {
-    return response.json();
-    })
-    .then(function(data) {
-    console.log(data);
-    self.articles=data.articles;
-    });
-    },
-    data() {
-    return {
-    articles: [],
-    searchTerm:''
-    }
-    },
-    methods: {
-    searchNews() {
-    let self = this;
-    fetch('https://newsapi.org/v2/everything?q='+
-    self.searchTerm + '&language=en', {
-    headers: {
-    'Authorization': 'Bearer <token>'
-    }
-    })
-    .then(function(response) {
-    return response.json();
-    })
-    .then(function(data) {
-    console.log(data);
-    self.articles = data.articles;
-    });
-    }
-    }
-
-}
-
-  
-const router = VueRouter.createRouter({
-  history: VueRouter.createWebHistory(),
-  routes: [
-  { path: '/', component: Home },
-  { path: '/news', component: NewsList }
-  ]
-  });
-
+});
+ 
 app.use(router)
+
 app.mount('#app');
